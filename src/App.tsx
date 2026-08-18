@@ -6,31 +6,37 @@ import ScrollIndicator from "@/components/scroll-indicator";
 import StrokeText from "@/components/stroke-text";
 import "@/components/stroke-text.css";
 
-import { FaGithub, FaTwitter, FaLinkedinIn, FaInstagram, FaYoutube, FaEnvelope } from "react-icons/fa";
-import { SiLeetcode, SiDevdotto } from "react-icons/si";
+import { FaGithub, FaTwitter, FaLinkedinIn, FaInstagram, FaEnvelope, FaPenNib, FaNewspaper } from "react-icons/fa";
+import { SiLeetcode } from "react-icons/si";
+import { FiFileText } from "react-icons/fi";
+import CodolioIcon from "@/components/icons/codolio-icon";
+import YouTubeMusicIcon from "@/components/icons/yt-music-icon";
 
 const CONTACT_CATEGORIES: CardNavCategory[] = [
   {
     label: "Social",
     links: [
-      { label: "Twitter / X", href: "#", ariaLabel: "Open Twitter profile", icon: FaTwitter },
-      { label: "Instagram", href: "#", ariaLabel: "Open Instagram profile", icon: FaInstagram },
-      { label: "YouTube", href: "#", ariaLabel: "Open YouTube channel", icon: FaYoutube },
+      { label: "Instagram", href: "https://www.instagram.com/", ariaLabel: "Open Instagram profile", icon: FaInstagram },
+      { label: "X (Twitter)", href: "https://x.com/", ariaLabel: "Open X profile", icon: FaTwitter },
+      { label: "YT Music", href: "https://music.youtube.com/@RakeshGupta-un7se", ariaLabel: "Open YT Music", icon: YouTubeMusicIcon },
+      { label: "Blogs", href: "#", ariaLabel: "Coming soon - Blogs", icon: FaPenNib },
     ],
   },
   {
     label: "Code",
     links: [
-      { label: "GitHub", href: "#", ariaLabel: "Open GitHub profile", icon: FaGithub },
-      { label: "LeetCode", href: "#", ariaLabel: "Open LeetCode profile", icon: SiLeetcode },
-      { label: "Dev.to", href: "#", ariaLabel: "Open Dev.to profile", icon: SiDevdotto },
+      { label: "GitHub", href: "https://github.com/debugonaut/", ariaLabel: "Open GitHub profile", icon: FaGithub },
+      { label: "LeetCode", href: "https://leetcode.com/u/Aadesh_Khande/", ariaLabel: "Open LeetCode profile", icon: SiLeetcode },
+      { label: "Codolio", href: "https://codolio.com/profile/thisvexesme", ariaLabel: "Open Codolio profile", icon: CodolioIcon },
+      { label: "Resume", href: "/Resume.pdf", ariaLabel: "Download resume", icon: FiFileText },
     ],
   },
   {
     label: "Direct",
     links: [
-      { label: "Email", href: "mailto:surru8990@gmail.com", ariaLabel: "Send an email", icon: FaEnvelope },
-      { label: "LinkedIn", href: "#", ariaLabel: "Open LinkedIn profile", icon: FaLinkedinIn },
+      { label: "Email", href: "mailto:contact@aadeshkhande.com", ariaLabel: "Send an email", icon: FaEnvelope },
+      { label: "LinkedIn", href: "https://www.linkedin.com/in/aadesh-khande/", ariaLabel: "Open LinkedIn profile", icon: FaLinkedinIn },
+      { label: "Newsletter", href: "#", ariaLabel: "Coming soon - Newsletter", icon: FaNewspaper },
     ],
   },
 ];
