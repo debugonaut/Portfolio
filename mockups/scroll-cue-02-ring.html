@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Mockup 02 — The Signal Ring</title>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,200..800&display=swap" rel="stylesheet" />
+<style>
+  :root { --bg: #000000; --fg: #ffffff; --muted: rgba(255,255,255,0.5); --ring: rgba(255,255,255,0.75); }
+  [data-theme="light"] { --bg: #f2ecdf; --fg: #000000; --muted: rgba(0,0,0,0.5); --ring: rgba(0,0,0,0.75); }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: var(--bg); color: var(--fg); font-family: "Bricolage Grotesque", system-ui, sans-serif; min-height: 100vh; overflow: hidden; transition: background 0.4s ease, color 0.4s ease; }
+  .tag { position: fixed; top: 14px; left: 16px; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); z-index: 10; }
+  .theme { position: fixed; top: 14px; right: 16px; z-index: 10; display: flex; gap: 5px; background: transparent; border: 1px solid var(--muted); border-radius: 999px; padding: 4px; cursor: pointer; }
+  .theme span { width: 16px; height: 16px; border-radius: 50%; background: var(--fg); }
+  .theme .dot-beige { background: #f2ecdf; }
+  .theme .dot-black { background: #000; }
+  main { height: 100vh; display: flex; flex-direction: column; }
+  .stage { flex: 1; display: grid; place-items: center; padding: 0 24px; }
+  h1 { font-size: clamp(2.75rem, 11vw, 10rem); font-weight: 800; text-transform: uppercase; letter-spacing: -0.04em; line-height: 0.95; text-align: center; }
+
+  .cue { position: absolute; left: 50%; bottom: 44px; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: 18px; }
+  .cue .label { font-size: 11px; font-weight: 500; letter-spacing: 0.3em; text-transform: uppercase; color: var(--muted); }
+
+  /* a signal sent downward: hairline rings expanding from a point */
+  .radar { position: relative; width: 64px; height: 64px; }
+  .radar .ring { position: absolute; left: 50%; top: 50%; width: 8px; height: 8px; margin: -4px 0 0 -4px; border: 1px solid var(--ring); border-radius: 50%; opacity: 0; }
+  .radar .ring:nth-child(1) { animation: ping 3s cubic-bezier(0.2, 0.6, 0.35, 1) infinite; }
+  .radar .ring:nth-child(2) { animation: ping 3s cubic-bezier(0.2, 0.6, 0.35, 1) 1.5s infinite; }
+  @keyframes ping {
+    0%   { transform: translate(0, 0) scale(1); opacity: 0.7; }
+    100% { transform: translate(0, 0) scale(7); opacity: 0; }
+  }
+  @media (prefers-reduced-motion: reduce) { .ring { animation: none !important; opacity: 0.35; transform: scale(3); } }
+</style>
+</head>
+<body>
+  <div class="tag">MOCKUP 02 · the signal ring · delete me</div>
+  <button class="theme" onclick="document.documentElement.dataset.theme = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark'" aria-label="Toggle theme"><span class="dot-black"></span><span class="dot-beige"></span></button>
+  <main>
+    <div class="stage"><h1>AADESH KHANDE</h1></div>
+    <div class="cue" aria-hidden="true">
+      <span class="label">Scroll</span>
+      <span class="radar"><span class="ring"></span><span class="ring"></span></span>
+    </div>
+  </main>
+</body>
+</html>

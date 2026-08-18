@@ -1,0 +1,14 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "overused-font",
+        "value": "geist",
+        "createdAt": "2026-08-18T07:48:37.005Z",
+        "reason": "User-pinned brand font from Card Nav reference screenshot"
+      }
+    ]
+  }
+}
