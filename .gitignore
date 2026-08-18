@@ -20,7 +20,7 @@ dist-ssr
 # env
 .env
 .env.local
-
+.impeccable
 # impeccable-ignore-start
 # Ephemeral output, runtime state, and per-dev overrides.
 # Unanchored: .impeccable may sit at the repo root or under a nested
