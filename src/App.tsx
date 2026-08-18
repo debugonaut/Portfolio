@@ -75,12 +75,18 @@ function App() {
   const promptRef = useRef<HTMLDivElement | null>(null);
   const nameRef = useRef<HTMLDivElement | null>(null);
   const navReadyRef = useRef(false);
+  const setDockedRef = useRef<((target: boolean) => void) | null>(null);
   const [strokeComplete, setStrokeComplete] = useState(false);
   const [nameDocked, setNameDocked] = useState(false);
   const [logoRevealed, setLogoRevealed] = useState(false);
 
   const handleStrokeComplete = useCallback(() => {
     setStrokeComplete(true);
+  }, []);
+
+  const handleLogoClick = useCallback(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    setDockedRef.current?.(false);
   }, []);
 
   // Hide nav and prompt immediately on mount until stroke animation completes
@@ -247,6 +253,8 @@ function App() {
       animate(target);
     };
 
+    setDockedRef.current = setDocked;
+
     let lastTouchY = 0;
     const onWheel = (e: WheelEvent) => {
       if (Math.abs(e.deltaY) > 8) setDocked(e.deltaY > 0);
@@ -278,6 +286,7 @@ function App() {
     window.addEventListener("resize", onResize);
 
     return () => {
+      setDockedRef.current = null;
       window.removeEventListener("wheel", onWheel);
       window.removeEventListener("touchstart", onTouchStart);
       window.removeEventListener("touchmove", onTouchMove);
@@ -303,6 +312,7 @@ function App() {
           menuColor="var(--nav-menu)"
           logoVisible={nameDocked}
           logoAnimate={logoRevealed}
+          onLogoClick={handleLogoClick}
         />
       </div>
 

@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import { gsap } from "gsap";
-import signatureSvg from "../signature.svg?url";
+import { SIGNATURE_PATH } from "./signature-paths";
 
 interface SignatureLogoProps {
   /** Whether to play the reveal animation */
@@ -9,17 +9,22 @@ interface SignatureLogoProps {
   width?: number;
   /** Height in pixels */
   height?: number;
+  /** Screen-pixel stroke thickness (via non-scaling-stroke) for crisp, refined ink */
+  strokeWidth?: number;
   className?: string;
 }
 
 /**
  * Signature logo with a wipe-reveal animation.
- * Uses CSS mix-blend-mode + filter for light/dark theme support.
+ * Uses native inline SVG with currentColor and non-scaling-stroke
+ * so the stroke is rendered in crisp screen pixels, ensuring it is
+ * clean, dark, and razor-sharp in both light and dark themes.
  */
 export default function SignatureLogo({
   animate = false,
-  width = 40,
-  height = 50,
+  width = 38,
+  height = 46,
+  strokeWidth = 1.2,
   className = "",
 }: SignatureLogoProps) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -33,18 +38,18 @@ export default function SignatureLogo({
     const prefersReducedMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
     if (prefersReducedMotion) {
       gsap.set(el, { clipPath: "inset(0 0 0 0)" });
-      gsap.set(el.querySelector(".sig-logo-img"), { opacity: 1, scale: 1 });
+      gsap.set(el.querySelector(".sig-logo-svg"), { opacity: 1, scale: 1 });
       hasAnimated.current = true;
       return;
     }
 
     hasAnimated.current = true;
 
-    const img = el.querySelector(".sig-logo-img") as HTMLElement;
+    const svg = el.querySelector(".sig-logo-svg") as SVGElement;
 
-    // Start: fully clipped, image invisible and scaled down
+    // Start: fully clipped, SVG invisible and scaled down
     gsap.set(el, { clipPath: "inset(0 100% 0 0)" });
-    gsap.set(img, { opacity: 0, scale: 0.85, transformOrigin: "center center" });
+    gsap.set(svg, { opacity: 0, scale: 0.85, transformOrigin: "center center" });
 
     const tl = gsap.timeline();
 
@@ -55,13 +60,17 @@ export default function SignatureLogo({
       ease: "power2.inOut",
     });
 
-    // Simultaneously fade in and scale up the image
-    tl.to(img, {
-      opacity: 1,
-      scale: 1,
-      duration: 0.6,
-      ease: "power2.out",
-    }, 0.15);
+    // Simultaneously fade in and scale up the SVG
+    tl.to(
+      svg,
+      {
+        opacity: 1,
+        scale: 1,
+        duration: 0.6,
+        ease: "power2.out",
+      },
+      0.15,
+    );
   }, [animate, width, height]);
 
   // Reset when animate goes false
@@ -71,8 +80,8 @@ export default function SignatureLogo({
       const el = containerRef.current;
       if (el) {
         gsap.set(el, { clipPath: "inset(0 100% 0 0)" });
-        const img = el.querySelector(".sig-logo-img") as HTMLElement;
-        if (img) gsap.set(img, { opacity: 0, scale: 0.85 });
+        const svg = el.querySelector(".sig-logo-svg") as SVGElement;
+        if (svg) gsap.set(svg, { opacity: 0, scale: 0.85 });
       }
     }
   }, [animate]);
@@ -91,19 +100,29 @@ export default function SignatureLogo({
       }}
       aria-hidden="true"
     >
-      <img
-        src={signatureSvg}
-        alt=""
-        className="sig-logo-img"
+      <svg
+        viewBox="0 0 480 600"
         width={width}
         height={height}
+        className="sig-logo-svg"
         style={{
           opacity: 0,
           display: "block",
-          /* Theme-aware: invert in dark mode, keep normal in light mode */
-          filter: "var(--logo-filter, none)",
+          color: "var(--nav-menu)",
+          willChange: "transform, opacity",
         }}
-      />
+      >
+        <g
+          transform="translate(0.000000,600.000000) scale(0.100000,-0.100000)"
+          fill="currentColor"
+          stroke="currentColor"
+          strokeWidth={strokeWidth}
+          strokeLinejoin="round"
+          strokeLinecap="round"
+        >
+          <path d={SIGNATURE_PATH} vectorEffect="non-scaling-stroke" />
+        </g>
+      </svg>
     </div>
   );
 }

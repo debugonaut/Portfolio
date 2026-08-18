@@ -35,6 +35,8 @@ interface CardNavProps {
   logoVisible?: boolean;
   /** Whether the logo should play its reveal animation */
   logoAnimate?: boolean;
+  /** Callback when the logo is clicked */
+  onLogoClick?: () => void;
 }
 
 const isReducedMotion = () =>
@@ -49,6 +51,7 @@ const CardNav: React.FC<CardNavProps> = ({
   menuColor,
   logoVisible = false,
   logoAnimate = false,
+  onLogoClick,
 }) => {
   const [isHamburgerOpen, setIsHamburgerOpen] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
@@ -300,12 +303,26 @@ const CardNav: React.FC<CardNavProps> = ({
 
           {/* Signature logo — centered in the top bar, revealed when name docks */}
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <SignatureLogo
-              animate={logoAnimate}
-              width={28}
-              height={35}
-              className={logoVisible ? "opacity-100" : "opacity-0"}
-            />
+            <a
+              href="#home"
+              onClick={(e) => {
+                e.preventDefault();
+                window.scrollTo({ top: 0, behavior: "smooth" });
+                onLogoClick?.();
+              }}
+              className={`inline-flex items-center justify-center transition-opacity duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent rounded-md cursor-pointer ${
+                logoVisible ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+              }`}
+              aria-label="Scroll to top of homepage"
+              tabIndex={logoVisible ? 0 : -1}
+            >
+              <SignatureLogo
+                animate={logoAnimate}
+                width={38}
+                height={46}
+                strokeWidth={1.2}
+              />
+            </a>
           </div>
 
           <div className="flex items-center">
