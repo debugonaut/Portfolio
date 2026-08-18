@@ -1,4 +1,4 @@
-import { useCallback, useLayoutEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { gsap } from "gsap";
 import { ThemeProvider } from "@/theme-provider";
 import CardNav, { type CardNavItem, type CardNavCategory } from "@/components/card-nav";
@@ -87,6 +87,19 @@ function App() {
   const handleLogoClick = useCallback(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
     setDockedRef.current?.(false);
+  }, []);
+
+  // Update tab title when switching away so it stands out cleanly in open tabs
+  useEffect(() => {
+    const handleVisibility = () => {
+      if (document.hidden) {
+        document.title = "   Aadesh Khande";
+      } else {
+        document.title = "Aadesh Khande — Portfolio";
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibility);
+    return () => document.removeEventListener("visibilitychange", handleVisibility);
   }, []);
 
   // Hide nav and prompt immediately on mount until stroke animation completes

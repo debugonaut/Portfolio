@@ -35,6 +35,13 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     document.documentElement.classList.toggle("dark", theme === "dark");
     window.localStorage.setItem(STORAGE_KEY, theme);
+
+    // Sync theme-color for mobile address bar
+    const color = theme === "dark" ? "#000000" : "#f2ecdf";
+    const themeMetas = document.querySelectorAll('meta[name="theme-color"]');
+    themeMetas.forEach((meta) => {
+      meta.setAttribute("content", color);
+    });
   }, [theme]);
 
   function toggleTheme(e?: MouseEvent<HTMLButtonElement>) {
