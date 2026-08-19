@@ -84,7 +84,6 @@
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
     overflow-x: hidden;
-    transition: background-color 0.525s ease, color 0.525s ease;
   }
 
   ::selection {
@@ -121,9 +120,9 @@
 }
 
 /* ============================================================
-   THEME SWITCH — circular reveal via View Transitions API.
-   Origin comes from the toggle's click position (set as
-   --vt-x / --vt-y on <html> before startViewTransition).
+   THEME SWITCH — AnimatedThemeToggler circle reveal.
+   The JS animates ::view-transition-new(root) directly via the
+   Web Animations API. These rules suppress browser defaults.
    ============================================================ */
 ::view-transition-old(root),
 ::view-transition-new(root) {
@@ -131,17 +130,9 @@
   mix-blend-mode: normal;
 }
 
-::view-transition-new(root) {
-  animation: vt-reveal 0.9s cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-@keyframes vt-reveal {
-  from {
-    clip-path: circle(0% at var(--vt-x, 50%) var(--vt-y, 50%));
-  }
-  to {
-    clip-path: circle(150% at var(--vt-x, 50%) var(--vt-y, 50%));
-  }
+/* Pin the new snapshot to collapsed clip until JS ready.then() fires */
+[data-theme-vt="active"]::view-transition-new(root) {
+  clip-path: var(--vt-clip-from);
 }
 
 @media (prefers-reduced-motion: reduce) {

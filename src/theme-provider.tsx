@@ -25,10 +25,6 @@ function getInitialTheme(): Theme {
   return "dark"; // brief: black background is the home state
 }
 
-type DocumentWithVT = Document & {
-  startViewTransition?: (update: () => void) => void;
-};
-
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [theme, setTheme] = useState<Theme>(getInitialTheme);
 
@@ -44,23 +40,8 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     });
   }, [theme]);
 
-  function toggleTheme(e?: MouseEvent<HTMLButtonElement>) {
-    const next: Theme = theme === "dark" ? "light" : "dark";
-    const apply = () => setTheme(next);
-
-    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const doc = document as DocumentWithVT;
-    if (!doc.startViewTransition || reduced || !e) {
-      apply();
-      return;
-    }
-
-    const rect = document.documentElement.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-    document.documentElement.style.setProperty("--vt-x", `${x}px`);
-    document.documentElement.style.setProperty("--vt-y", `${y}px`);
-    doc.startViewTransition(apply);
+  function toggleTheme() {
+    setTheme((prev) => (prev === "dark" ? "light" : "dark"));
   }
 
   return (
