@@ -47,7 +47,7 @@ function Chevron() {
 }
 
 export default function ScrollIndicator({
-  label = "Scroll down",
+  label = "",
   count = 3,
   onClick,
   className = "",

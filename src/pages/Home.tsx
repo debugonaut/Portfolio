@@ -400,7 +400,7 @@ export default function Home() {
           className="pointer-events-none absolute inset-x-0 flex justify-center will-change-[opacity,transform]"
           style={{ bottom: "max(env(safe-area-inset-bottom), clamp(1.5rem, 6vh, 2.5rem))" }}
         >
-          <ScrollIndicator decorative label="Scroll down" />
+          <ScrollIndicator decorative label="" />
         </div>
       </main>
     </>
