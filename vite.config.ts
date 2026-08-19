@@ -11,4 +11,6 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  // SPA fallback for proper 404 routing
+  appType: "spa",
 });

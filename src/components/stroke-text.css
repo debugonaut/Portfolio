@@ -6,10 +6,14 @@
   z-index: inherit;
 }
 
+/* Height comes from the viewBox aspect ratio (height:auto), so the type
+   always scales to fill the available width — no fixed-hero-height pill
+   that squeezes on small handheld screens. */
 .stroke-text__svg {
   display: block;
   width: 100%;
-  height: var(--stroke-text-height, 160px);
+  height: auto;
+  max-width: 100%;
 }
 
 .stroke-text__stroke,

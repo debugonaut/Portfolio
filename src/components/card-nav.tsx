@@ -69,34 +69,7 @@ const CardNav: React.FC<CardNavProps> = ({
     if (!navEl) return 260;
 
     const isMobile = window.matchMedia("(max-width: 768px)").matches;
-    if (isMobile) {
-      const contentEl = navEl.querySelector(".card-nav-content") as HTMLElement;
-      if (contentEl) {
-        const wasVisible = contentEl.style.visibility;
-        const wasPointerEvents = contentEl.style.pointerEvents;
-        const wasPosition = contentEl.style.position;
-        const wasHeight = contentEl.style.height;
-
-        contentEl.style.visibility = "visible";
-        contentEl.style.pointerEvents = "auto";
-        contentEl.style.position = "static";
-        contentEl.style.height = "auto";
-
-        contentEl.offsetHeight; // force layout
-
-        const topBar = 60;
-        const padding = 16;
-        const contentHeight = contentEl.scrollHeight;
-
-        contentEl.style.visibility = wasVisible;
-        contentEl.style.pointerEvents = wasPointerEvents;
-        contentEl.style.position = wasPosition;
-        contentEl.style.height = wasHeight;
-
-        return topBar + contentHeight + padding;
-      }
-    }
-    return 260;
+    return isMobile ? 230 : 260;
   };
 
   const createTimeline = () => {
@@ -265,7 +238,7 @@ const CardNav: React.FC<CardNavProps> = ({
 
   return (
     <div
-      className={`card-nav-container absolute left-1/2 top-[1.2em] z-[99] w-[90%] max-w-[800px] -translate-x-1/2 md:top-[2em] ${className}`}
+      className={`card-nav-container absolute left-1/2 top-[1.2em] z-[99] w-[94%] max-w-[800px] -translate-x-1/2 md:w-[90%] md:top-[2em] ${className}`}
     >
       <nav
         ref={navRef}
@@ -331,9 +304,9 @@ const CardNav: React.FC<CardNavProps> = ({
         </div>
 
         <div
-          className={`card-nav-content absolute bottom-0 left-0 right-0 top-[60px] z-[1] flex flex-col items-stretch justify-start gap-2 p-2 ${
+          className={`card-nav-content absolute bottom-0 left-0 right-0 top-[60px] z-[1] flex flex-row items-stretch gap-1.5 p-2 sm:gap-2 md:gap-[12px] ${
             isExpanded ? "visible pointer-events-auto" : "invisible pointer-events-none"
-          } md:flex-row md:items-end md:gap-[12px]`}
+          }`}
           aria-hidden={!isExpanded}
         >
           {(items || []).slice(0, 3).map((item, idx) => {
@@ -347,12 +320,12 @@ const CardNav: React.FC<CardNavProps> = ({
             return (
               <div
                 key={`${item.label}-${idx}`}
-                className="nav-card group/card relative flex min-h-[60px] min-w-0 flex-[1_1_auto] flex-col gap-2 p-[12px_16px] select-none rounded-[calc(0.75rem-0.2rem)] h-auto md:h-full md:min-h-0 md:flex-[1_1_0%]"
+                className="nav-card group/card relative flex min-w-0 flex-[1_1_0%] flex-col justify-between gap-1 p-[8px_8px] select-none rounded-[calc(0.75rem-0.2rem)] h-full sm:p-[10px_12px] md:p-[12px_16px]"
                 ref={setCardRef(idx)}
                 style={{ backgroundColor: item.bgColor, color: item.textColor }}
               >
                 {/* Card header */}
-                <div className="nav-card-label relative flex items-center gap-2 text-[18px] font-normal tracking-[-0.5px] md:text-[22px]">
+                <div className="nav-card-label relative flex items-center gap-1 text-[13px] font-medium tracking-[-0.3px] sm:text-[16px] md:text-[22px] md:font-normal md:tracking-[-0.5px]">
                   {hasCategories && activeCat ? (
                     <button
                       onClick={() => drillBack(idx)}
@@ -360,31 +333,31 @@ const CardNav: React.FC<CardNavProps> = ({
                       style={{ color: item.textColor }}
                       aria-label={`Back to ${item.label} categories`}
                     >
-                      <GoArrowLeft className="text-[16px]" aria-hidden="true" />
-                      <span>{activeCategoryData?.label}</span>
+                      <GoArrowLeft className="text-[12px] shrink-0 sm:text-[14px] md:text-[16px]" aria-hidden="true" />
+                      <span className="truncate">{activeCategoryData?.label}</span>
                     </button>
                   ) : (
-                    <span>{item.label}</span>
+                    <span className="truncate">{item.label}</span>
                   )}
                   <span className="absolute bottom-0 left-0 right-0 h-[1px] origin-left scale-x-0 bg-current opacity-30 transition-transform duration-300 ease-out group-hover/card:scale-x-100" />
                 </div>
 
                 {/* Card content */}
-                <div className="nav-card-links mt-auto flex flex-col gap-[2px]">
+                <div className="nav-card-links mt-auto flex flex-col gap-[2px] sm:gap-[3px]">
                   {hasCategories && !activeCat ? (
                     item.categories!.map((cat, i) => (
                       <button
                         key={`${cat.label}-${i}`}
                         onClick={() => drillIntoCategory(idx, cat.label)}
-                        className="nav-card-link group/link inline-flex cursor-pointer items-center gap-[6px] border-0 bg-transparent p-0 text-left font-[inherit] text-[15px] no-underline transition-opacity duration-300 hover:opacity-75 md:text-[16px]"
+                        className="nav-card-link group/link inline-flex cursor-pointer items-center gap-1 border-0 bg-transparent p-0 text-left font-[inherit] text-[11px] no-underline transition-opacity duration-300 hover:opacity-75 sm:text-[13px] md:text-[16px]"
                         style={{ color: item.textColor }}
                         aria-label={`View ${cat.label} links`}
                       >
                         <GoArrowUpRight
-                          className="nav-card-link-icon shrink-0 transition-transform duration-300 group-hover/link:translate-x-1 group-hover/link:-translate-y-1"
+                          className="nav-card-link-icon shrink-0 text-[11px] transition-transform duration-300 group-hover/link:translate-x-1 group-hover/link:-translate-y-1 sm:text-[13px] md:text-[16px]"
                           aria-hidden="true"
                         />
-                        {cat.label}
+                        <span className="truncate">{cat.label}</span>
                       </button>
                     ))
                   ) : (
@@ -393,21 +366,21 @@ const CardNav: React.FC<CardNavProps> = ({
                       return (
                         <a
                           key={`${lnk.label}-${i}`}
-                          className="nav-card-link group/link inline-flex items-center gap-[6px] text-[15px] no-underline transition-opacity duration-300 hover:opacity-75 md:text-[16px]"
+                          className="nav-card-link group/link inline-flex items-center gap-1 text-[11px] no-underline transition-opacity duration-300 hover:opacity-75 sm:text-[13px] md:text-[16px]"
                           href={lnk.href}
                           aria-label={lnk.ariaLabel}
                           target="_blank"
                           rel="noopener noreferrer"
                         >
                           {Icon ? (
-                            <Icon className="nav-card-link-icon shrink-0 text-[16px]" aria-hidden="true" />
+                            <Icon className="nav-card-link-icon shrink-0 text-[11px] sm:text-[13px] md:text-[16px]" aria-hidden="true" />
                           ) : (
                             <GoArrowUpRight
-                              className="nav-card-link-icon shrink-0 transition-transform duration-300 group-hover/link:translate-x-1 group-hover/link:-translate-y-1"
+                              className="nav-card-link-icon shrink-0 text-[11px] transition-transform duration-300 group-hover/link:translate-x-1 group-hover/link:-translate-y-1 sm:text-[13px] md:text-[16px]"
                               aria-hidden="true"
                             />
                           )}
-                          {lnk.label}
+                          <span className="truncate">{lnk.label}</span>
                         </a>
                       );
                     })

@@ -12,6 +12,11 @@ dist
 dist-ssr
 *.local
 
+# Non-essential artifacts & docs (kept local, not committed)
+skills/
+mockups/
+dist-preview/
+
 # app support (contains API keys, logs, session state)
 .agents/
 .freebuff/

@@ -6,6 +6,8 @@ interface StrokeTextProps {
   strokeColor?: string;
   fillColor?: string;
   strokeWidth?: number;
+  /** Viewport width (px) at or below which the name stacks into two lines. */
+  stackBreakpoint?: number;
   drawDuration?: number;
   fillDelay?: number;
   stagger?: number;
@@ -15,6 +17,8 @@ interface StrokeTextProps {
   letterSpacing?: number;
   className?: string;
   style?: React.CSSProperties;
+  /** Whether the stroke drawing timeline should play (defaults to true) */
+  animate?: boolean;
   onComplete?: () => void;
 }
 
@@ -23,6 +27,7 @@ export default function StrokeText({
   strokeColor = "#1a1712",
   fillColor = "#1a1712",
   strokeWidth = 1.4,
+  stackBreakpoint = 640,
   drawDuration = 1.6,
   fillDelay = 0.2,
   stagger = 0.05,
@@ -32,38 +37,68 @@ export default function StrokeText({
   letterSpacing = -4,
   className = "",
   style,
+  animate = true,
   onComplete,
 }: StrokeTextProps) {
   const rootRef = useRef<HTMLSpanElement>(null);
-  const strokeTextRef = useRef<SVGTextElement>(null);
+  const textGroupRef = useRef<SVGGElement>(null);
   const wipeRectRef = useRef<SVGRectElement>(null);
   const [box, setBox] = useState<{ x: number; y: number; width: number; height: number } | null>(null);
   const rawId = useId();
   const wipeId = `stroke-text-wipe-${rawId.replace(/[^a-zA-Z0-9_-]/g, "")}`;
 
-  const characters = useMemo(() => Array.from(String(text ?? "")), [text]);
+  // ------------------------------------------------------------------
+  // RESPONSIVE LOCKUP — on handheld/portrait widths we stack the name
+  // into two lines ("Aadesh" / "Khande") so it reads as a big type
+  // lockup that fills the viewport width, instead of the desktop's
+  // single giant line shrinking on mobile to a thin sliver. Desktop
+  // (>= stackBreakpoint) stays an untouched single line.
+  // ------------------------------------------------------------------
+  const [stacked, setStacked] = useState(false);
+
+  useEffect(() => {
+    const mql = window.matchMedia(`(max-width: ${stackBreakpoint}px)`);
+    const apply = () => setStacked(mql.matches);
+    apply();
+    mql.addEventListener("change", apply);
+    return () => mql.removeEventListener("change", apply);
+  }, [stackBreakpoint]);
+
+  const lines = useMemo(() => {
+    const normalized = String(text ?? "").trim();
+    if (!stacked || !normalized) return [normalized];
+    const parts = normalized.split(/\s+/).filter(Boolean);
+    if (parts.length < 2) return [normalized];
+    return [parts.slice(0, -1).join(" "), parts[parts.length - 1]];
+  }, [text, stacked]);
+
   const dash = Math.max(fontSize * 7, 200);
+  // Proportionally tighter tracking on the stacked (smaller) lockup.
+  const effectiveLetterSpacing = stacked ? Math.round(letterSpacing * 0.55) : letterSpacing;
+  // Vertical rhythm between stacked lines.
+  const lineHeight = Math.round(fontSize * 1.18);
+  const baselineY = (i: number) => Math.round(fontSize * 1.02 + i * lineHeight);
 
   const fontStyle = useMemo(
     () => ({
       fontSize: `${fontSize}px`,
       fontWeight,
-      letterSpacing: `${letterSpacing}px`,
+      letterSpacing: `${effectiveLetterSpacing}px`,
       fontFamily: "var(--font-hero)",
     }),
-    [fontSize, fontWeight, letterSpacing]
+    [fontSize, fontWeight, effectiveLetterSpacing]
   );
 
   useLayoutEffect(() => {
-    const node = strokeTextRef.current;
+    const node = textGroupRef.current;
     if (!node) return undefined;
 
     let cancelled = false;
     const measure = () => {
-      if (cancelled || !strokeTextRef.current) return;
+      if (cancelled || !textGroupRef.current) return;
       let bbox;
       try {
-        bbox = strokeTextRef.current.getBBox();
+        bbox = textGroupRef.current.getBBox();
       } catch {
         return;
       }
@@ -75,6 +110,7 @@ export default function StrokeText({
         width: bbox.width + pad * 2,
         height: bbox.height + pad * 2,
       };
+      if (cancelled) return;
       setBox((prev) =>
         prev && Math.abs(prev.x - next.x) < 0.5 && Math.abs(prev.width - next.width) < 0.5 && Math.abs(prev.y - next.y) < 0.5
           ? prev
@@ -90,7 +126,7 @@ export default function StrokeText({
     return () => {
       cancelled = true;
     };
-  }, [characters, fontSize, fontWeight, letterSpacing, strokeWidth]);
+  }, [lines, fontSize, fontWeight, effectiveLetterSpacing, strokeWidth]);
 
   useEffect(() => {
     const root = rootRef.current;
@@ -125,6 +161,10 @@ export default function StrokeText({
 
     setStart();
 
+    if (!animate) {
+      return () => gsap.killTweensOf(targets);
+    }
+
     const tl = gsap.timeline({
       defaults: { overwrite: "auto" },
       onComplete: () => {
@@ -142,57 +182,69 @@ export default function StrokeText({
       tl.kill();
       gsap.killTweensOf(targets);
     };
-  }, [box, dash, drawDuration, fillDelay, stagger, ease, onComplete]);
+  }, [box, dash, drawDuration, fillDelay, stagger, ease, animate, onComplete]);
 
-  const viewBox = box ? `${box.x} ${box.y} ${box.width} ${box.height}` : `0 ${-fontSize} 600 ${fontSize * 1.3}`;
+  const viewBox = box ? `${box.x} ${box.y} ${box.width} ${box.height}` : `0 ${-fontSize * 1.3} 600 ${fontSize * 1.3}`;
 
   return (
     <span
       ref={rootRef}
       className={`stroke-text ${className}`.trim()}
-      style={{ ...style, "--stroke-text-height": `${Math.round(fontSize * 1.3)}px` } as React.CSSProperties}
+      style={style}
       role="img"
       aria-label={String(text ?? "")}
     >
-      <svg className="stroke-text__svg" viewBox={viewBox} preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+      <svg
+        className="stroke-text__svg"
+        viewBox={viewBox}
+        preserveAspectRatio="xMidYMid meet"
+        aria-hidden="true"
+      >
         <defs>
           <clipPath id={wipeId} clipPathUnits="userSpaceOnUse">
             <rect ref={wipeRectRef} x={box?.x ?? 0} y={box?.y ?? 0} width="0" height={box?.height ?? fontSize * 1.3} />
           </clipPath>
         </defs>
-        <text
-          ref={strokeTextRef}
-          className="stroke-text__stroke"
-          x="0"
-          y="0"
-          fill="none"
-          stroke={strokeColor}
-          strokeWidth={strokeWidth}
-          strokeLinejoin="round"
-          strokeLinecap="round"
-          style={fontStyle}
-        >
-          {characters.map((char, index) => (
-            <tspan data-stroke-char key={`s-${index}`}>
-              {char}
-            </tspan>
+        <g ref={textGroupRef}>
+          {lines.map((line, li) => (
+            <text
+              key={`s-${li}`}
+              className="stroke-text__stroke"
+              x="0"
+              y={baselineY(li)}
+              fill="none"
+              stroke={strokeColor}
+              strokeWidth={strokeWidth}
+              strokeLinejoin="round"
+              strokeLinecap="round"
+              style={fontStyle}
+            >
+              {Array.from(line).map((char, ci) => (
+                <tspan data-stroke-char key={`sc-${ci}`}>
+                  {char}
+                </tspan>
+              ))}
+            </text>
           ))}
-        </text>
-        <text
-          className="stroke-text__fill"
-          x="0"
-          y="0"
-          fill={fillColor}
-          stroke="none"
-          style={fontStyle}
-          clipPath={`url(#${wipeId})`}
-        >
-          {characters.map((char, index) => (
-            <tspan data-fill-char key={`f-${index}`}>
-              {char}
-            </tspan>
-          ))}
-        </text>
+        </g>
+        {lines.map((line, li) => (
+          <text
+            key={`f-${li}`}
+            className="stroke-text__fill"
+            x="0"
+            y={baselineY(li)}
+            fill={fillColor}
+            stroke="none"
+            style={fontStyle}
+            clipPath={`url(#${wipeId})`}
+          >
+            {Array.from(line).map((char, ci) => (
+              <tspan data-fill-char key={`fc-${ci}`}>
+                {char}
+              </tspan>
+            ))}
+          </text>
+        ))}
       </svg>
     </span>
   );
