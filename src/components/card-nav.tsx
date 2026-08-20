@@ -69,7 +69,7 @@ const CardNav: React.FC<CardNavProps> = ({
     if (!navEl) return 260;
 
     const isMobile = window.matchMedia("(max-width: 768px)").matches;
-    return isMobile ? 230 : 260;
+    return isMobile ? 260 : 260;
   };
 
   const createTimeline = () => {
@@ -237,161 +237,172 @@ const CardNav: React.FC<CardNavProps> = ({
   );
 
   return (
-    <div
-      className={`card-nav-container absolute left-1/2 top-[1.2em] z-[99] w-[94%] max-w-[800px] -translate-x-1/2 md:w-[90%] md:top-[2em] ${className}`}
-    >
-      <nav
-        ref={navRef}
-        aria-label="Primary"
-        className={`card-nav ${isExpanded ? "open" : ""} relative block h-[60px] overflow-hidden rounded-xl p-0 shadow-md will-change-[height]`}
-        style={{ backgroundColor: baseColor }}
+    <>
+      {/* Backdrop Scrim when menu is opened — blurs underlying content cleanly */}
+      <div
+        className={`card-nav-scrim fixed inset-0 z-[90] bg-black/40 backdrop-blur-[4px] transition-opacity duration-300 ${
+          isExpanded ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+        }`}
+        onClick={toggleMenu}
+        aria-hidden="true"
+      />
+
+      <div
+        className={`card-nav-container absolute left-1/2 top-[1.2em] z-[99] w-[94%] max-w-[800px] -translate-x-1/2 md:w-[90%] md:top-[2em] ${className}`}
       >
-        <div className="card-nav-top absolute inset-x-0 top-0 z-[2] flex h-[60px] items-center justify-between p-2 pl-[1.1rem]">
-          <div
-            className={`hamburger-menu ${isHamburgerOpen ? "open" : ""} flex h-full cursor-pointer flex-col items-center justify-center gap-[6px] group`}
-            onClick={toggleMenu}
-            onKeyDown={(e: React.KeyboardEvent<HTMLDivElement>) => {
-              if (e.key === "Enter" || e.key === " ") {
-                e.preventDefault();
-                toggleMenu();
-              }
-            }}
-            role="button"
-            aria-label={isExpanded ? "Close menu" : "Open menu"}
-            aria-expanded={isExpanded}
-            tabIndex={0}
-            style={{ color: menuColor }}
-          >
-            <div
-              className={`hamburger-line h-[2px] w-[30px] bg-current transition-[transform,opacity,margin] duration-300 ease-linear [transform-origin:50%_50%] ${
-                isHamburgerOpen ? "translate-y-[4px] rotate-45" : ""
-              } group-hover:opacity-75`}
-            />
-            <div
-              className={`hamburger-line h-[2px] w-[30px] bg-current transition-[transform,opacity,margin] duration-300 ease-linear [transform-origin:50%_50%] ${
-                isHamburgerOpen ? "-translate-y-[4px] -rotate-45" : ""
-              } group-hover:opacity-75`}
-            />
-          </div>
-
-          {/* Signature logo — centered in the top bar, revealed when name docks */}
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <a
-              href="#home"
-              onClick={(e) => {
-                e.preventDefault();
-                window.scrollTo({ top: 0, behavior: "smooth" });
-                onLogoClick?.();
-              }}
-              className={`inline-flex items-center justify-center transition-opacity duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent rounded-md cursor-pointer ${
-                logoVisible ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
-              }`}
-              aria-label="Scroll to top of homepage"
-              tabIndex={logoVisible ? 0 : -1}
-            >
-              <SignatureLogo
-                animate={logoAnimate}
-                width={38}
-                height={46}
-                strokeWidth={1.2}
-              />
-            </a>
-          </div>
-
-          <div className="flex items-center">
-            <ThemeToggle />
-          </div>
-        </div>
-
-        <div
-          className={`card-nav-content absolute bottom-0 left-0 right-0 top-[60px] z-[1] flex flex-row items-stretch gap-1.5 p-2 sm:gap-2 md:gap-[12px] ${
-            isExpanded ? "visible pointer-events-auto" : "invisible pointer-events-none"
-          }`}
-          aria-hidden={!isExpanded}
+        <nav
+          ref={navRef}
+          aria-label="Primary"
+          className={`card-nav ${isExpanded ? "open" : ""} relative block h-[60px] overflow-hidden rounded-xl p-0 shadow-lg will-change-[height]`}
+          style={{ backgroundColor: baseColor }}
         >
-          {(items || []).slice(0, 3).map((item, idx) => {
-            const hasCategories = item.categories && item.categories.length > 0;
-            const activeCat = activeCategory[idx] ?? null;
-            const activeCategoryData =
-              hasCategories && activeCat
-                ? item.categories!.find((c) => c.label === activeCat)
-                : null;
-
-            return (
+          <div className="card-nav-top absolute inset-x-0 top-0 z-[2] flex h-[60px] items-center justify-between p-2 pl-[1.1rem]">
+            <div
+              className={`hamburger-menu ${isHamburgerOpen ? "open" : ""} flex h-full cursor-pointer flex-col items-center justify-center gap-[6px] group`}
+              onClick={toggleMenu}
+              onKeyDown={(e: React.KeyboardEvent<HTMLDivElement>) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  toggleMenu();
+                }
+              }}
+              role="button"
+              aria-label={isExpanded ? "Close menu" : "Open menu"}
+              aria-expanded={isExpanded}
+              tabIndex={0}
+              style={{ color: menuColor }}
+            >
               <div
-                key={`${item.label}-${idx}`}
-                className="nav-card group/card relative flex min-w-0 flex-[1_1_0%] flex-col justify-between gap-1 p-[8px_8px] select-none rounded-[calc(0.75rem-0.2rem)] h-full sm:p-[10px_12px] md:p-[12px_16px]"
-                ref={setCardRef(idx)}
-                style={{ backgroundColor: item.bgColor, color: item.textColor }}
-              >
-                {/* Card header */}
-                <div className="nav-card-label relative flex items-center gap-1 text-[13px] font-medium tracking-[-0.3px] sm:text-[16px] md:text-[22px] md:font-normal md:tracking-[-0.5px]">
-                  {hasCategories && activeCat ? (
-                    <button
-                      onClick={() => drillBack(idx)}
-                      className="flex cursor-pointer items-center gap-1 border-0 bg-transparent p-0 font-[inherit] transition-opacity duration-300 hover:opacity-75"
-                      style={{ color: item.textColor }}
-                      aria-label={`Back to ${item.label} categories`}
-                    >
-                      <GoArrowLeft className="text-[12px] shrink-0 sm:text-[14px] md:text-[16px]" aria-hidden="true" />
-                      <span className="truncate">{activeCategoryData?.label}</span>
-                    </button>
-                  ) : (
-                    <span className="truncate">{item.label}</span>
-                  )}
-                  <span className="absolute bottom-0 left-0 right-0 h-[1px] origin-left scale-x-0 bg-current opacity-30 transition-transform duration-300 ease-out group-hover/card:scale-x-100" />
-                </div>
+                className={`hamburger-line h-[2px] w-[30px] bg-current transition-[transform,opacity,margin] duration-300 ease-linear [transform-origin:50%_50%] ${
+                  isHamburgerOpen ? "translate-y-[4px] rotate-45" : ""
+                } group-hover:opacity-75`}
+              />
+              <div
+                className={`hamburger-line h-[2px] w-[30px] bg-current transition-[transform,opacity,margin] duration-300 ease-linear [transform-origin:50%_50%] ${
+                  isHamburgerOpen ? "-translate-y-[4px] -rotate-45" : ""
+                } group-hover:opacity-75`}
+              />
+            </div>
 
-                {/* Card content */}
-                <div className="nav-card-links mt-auto flex flex-col gap-[2px] sm:gap-[3px]">
-                  {hasCategories && !activeCat ? (
-                    item.categories!.map((cat, i) => (
+            {/* Signature logo — centered in the top bar, revealed when name docks */}
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+              <a
+                href="#home"
+                onClick={(e) => {
+                  e.preventDefault();
+                  window.scrollTo({ top: 0, behavior: "smooth" });
+                  onLogoClick?.();
+                }}
+                className={`inline-flex items-center justify-center transition-opacity duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent rounded-md cursor-pointer ${
+                  logoVisible ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+                }`}
+                aria-label="Scroll to top of homepage"
+                tabIndex={logoVisible ? 0 : -1}
+              >
+                <SignatureLogo
+                  animate={logoAnimate}
+                  width={38}
+                  height={46}
+                  strokeWidth={1.2}
+                />
+              </a>
+            </div>
+
+            <div className="flex items-center">
+              <ThemeToggle />
+            </div>
+          </div>
+
+          <div
+            className={`card-nav-content absolute bottom-0 left-0 right-0 top-[60px] z-[1] flex flex-row items-stretch gap-1.5 p-2 sm:gap-2 sm:p-2.5 md:gap-[12px] md:p-3 ${
+              isExpanded ? "visible pointer-events-auto" : "invisible pointer-events-none"
+            }`}
+            aria-hidden={!isExpanded}
+          >
+            {(items || []).slice(0, 3).map((item, idx) => {
+              const hasCategories = item.categories && item.categories.length > 0;
+              const activeCat = activeCategory[idx] ?? null;
+              const activeCategoryData =
+                hasCategories && activeCat
+                  ? item.categories!.find((c) => c.label === activeCat)
+                  : null;
+
+              return (
+                <div
+                  key={`${item.label}-${idx}`}
+                  className="nav-card group/card relative flex min-w-0 flex-[1_1_0%] flex-col justify-between gap-1 p-[8px_8px] select-none rounded-[calc(0.75rem-0.2rem)] h-full sm:p-[10px_12px] md:p-[12px_16px] overflow-hidden"
+                  style={{ backgroundColor: item.bgColor, color: item.textColor }}
+                  ref={setCardRef(idx)}
+                >
+                  {/* Card header */}
+                  <div className="nav-card-label relative flex items-center gap-1 text-[12px] font-semibold tracking-[-0.2px] sm:text-[15px] md:text-[22px] md:font-normal md:tracking-[-0.5px]">
+                    {hasCategories && activeCat ? (
                       <button
-                        key={`${cat.label}-${i}`}
-                        onClick={() => drillIntoCategory(idx, cat.label)}
-                        className="nav-card-link group/link inline-flex cursor-pointer items-center gap-1 border-0 bg-transparent p-0 text-left font-[inherit] text-[11px] no-underline transition-opacity duration-300 hover:opacity-75 sm:text-[13px] md:text-[16px]"
+                        onClick={() => drillBack(idx)}
+                        className="flex cursor-pointer items-center gap-1 border-0 bg-transparent p-0 font-[inherit] transition-opacity duration-300 hover:opacity-75"
                         style={{ color: item.textColor }}
-                        aria-label={`View ${cat.label} links`}
+                        aria-label={`Back to ${item.label} categories`}
                       >
-                        <GoArrowUpRight
-                          className="nav-card-link-icon shrink-0 text-[11px] transition-transform duration-300 group-hover/link:translate-x-1 group-hover/link:-translate-y-1 sm:text-[13px] md:text-[16px]"
-                          aria-hidden="true"
-                        />
-                        <span className="truncate">{cat.label}</span>
+                        <GoArrowLeft className="text-[11px] shrink-0 sm:text-[13px] md:text-[16px]" aria-hidden="true" />
+                        <span className="truncate">{activeCategoryData?.label}</span>
                       </button>
-                    ))
-                  ) : (
-                    (activeCategoryData?.links ?? item.links ?? []).map((lnk, i) => {
-                      const Icon = lnk.icon;
-                      return (
-                        <a
-                          key={`${lnk.label}-${i}`}
-                          className="nav-card-link group/link inline-flex items-center gap-1 text-[11px] no-underline transition-opacity duration-300 hover:opacity-75 sm:text-[13px] md:text-[16px]"
-                          href={lnk.href}
-                          aria-label={lnk.ariaLabel}
-                          target="_blank"
-                          rel="noopener noreferrer"
+                    ) : (
+                      <span className="truncate">{item.label}</span>
+                    )}
+                    <span className="absolute bottom-0 left-0 right-0 h-[1px] origin-left scale-x-0 bg-current opacity-30 transition-transform duration-300 ease-out group-hover/card:scale-x-100" />
+                  </div>
+
+                  {/* Card content */}
+                  <div className="nav-card-links mt-auto flex flex-col gap-[3px] sm:gap-[4px]">
+                    {hasCategories && !activeCat ? (
+                      item.categories!.map((cat, i) => (
+                        <button
+                          key={`${cat.label}-${i}`}
+                          onClick={() => drillIntoCategory(idx, cat.label)}
+                          className="nav-card-link group/link inline-flex cursor-pointer items-center gap-1 border-0 bg-transparent p-0 text-left font-[inherit] text-[10px] leading-[1.25] no-underline transition-opacity duration-300 hover:opacity-75 sm:text-[12.5px] md:text-[16px]"
+                          style={{ color: item.textColor }}
+                          aria-label={`View ${cat.label} links`}
                         >
-                          {Icon ? (
-                            <Icon className="nav-card-link-icon shrink-0 text-[11px] sm:text-[13px] md:text-[16px]" aria-hidden="true" />
-                          ) : (
-                            <GoArrowUpRight
-                              className="nav-card-link-icon shrink-0 text-[11px] transition-transform duration-300 group-hover/link:translate-x-1 group-hover/link:-translate-y-1 sm:text-[13px] md:text-[16px]"
-                              aria-hidden="true"
-                            />
-                          )}
-                          <span className="truncate">{lnk.label}</span>
-                        </a>
-                      );
-                    })
-                  )}
+                          <GoArrowUpRight
+                            className="nav-card-link-icon shrink-0 text-[10px] transition-transform duration-300 group-hover/link:translate-x-1 group-hover/link:-translate-y-1 sm:text-[12px] md:text-[16px]"
+                            aria-hidden="true"
+                          />
+                          <span className="truncate">{cat.label}</span>
+                        </button>
+                      ))
+                    ) : (
+                      (activeCategoryData?.links ?? item.links ?? []).map((lnk, i) => {
+                        const Icon = lnk.icon;
+                        return (
+                          <a
+                            key={`${lnk.label}-${i}`}
+                            className="nav-card-link group/link inline-flex items-center gap-1 text-[10px] leading-[1.25] no-underline transition-opacity duration-300 hover:opacity-75 sm:text-[12.5px] md:text-[16px]"
+                            href={lnk.href}
+                            aria-label={lnk.ariaLabel}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            {Icon ? (
+                              <Icon className="nav-card-link-icon shrink-0 text-[10px] sm:text-[12px] md:text-[16px]" aria-hidden="true" />
+                            ) : (
+                              <GoArrowUpRight
+                                className="nav-card-link-icon shrink-0 text-[10px] transition-transform duration-300 group-hover/link:translate-x-1 group-hover/link:-translate-y-1 sm:text-[12px] md:text-[16px]"
+                                aria-hidden="true"
+                              />
+                            )}
+                            <span className="truncate">{lnk.label}</span>
+                          </a>
+                        );
+                      })
+                    )}
+                  </div>
                 </div>
-              </div>
-            );
-          })}
-        </div>
-      </nav>
-    </div>
+              );
+            })}
+          </div>
+        </nav>
+      </div>
+    </>
   );
 };
 

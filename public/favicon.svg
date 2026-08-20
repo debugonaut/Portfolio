@@ -6,7 +6,7 @@
     }
     @media (prefers-color-scheme: dark) {
       :root {
-        --sig-color: #ffffff;
+        --sig-color: #f0e6d3;
       }
     }
     .sig-glyph {

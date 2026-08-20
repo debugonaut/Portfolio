@@ -1,4 +1,4 @@
-import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { gsap } from "gsap";
 
 interface StrokeTextProps {
@@ -25,39 +25,26 @@ interface StrokeTextProps {
 
 export default function StrokeText({
   text,
-  strokeColor = "#1a1712",
-  fillColor = "#1a1712",
+  strokeColor = "var(--foreground)",
+  fillColor = "var(--foreground)",
   strokeWidth = 1.4,
   stackBreakpoint = 640,
   drawDuration = 1.6,
   fillDelay = 0.2,
   stagger = 0.05,
   ease = "power2.out",
-  fontSize = 128,
   fontWeight = 400,
-  letterSpacing = -4,
-  wordSpacing = 24,
   className = "",
   style,
   animate = true,
   onComplete,
 }: StrokeTextProps) {
-  const rootRef = useRef<HTMLSpanElement>(null);
-  const textGroupRef = useRef<SVGGElement>(null);
-  const wipeRectRef = useRef<SVGRectElement>(null);
-  const [box, setBox] = useState<{ x: number; y: number; width: number; height: number } | null>(null);
-  const rawId = useId();
-  const wipeId = `stroke-text-wipe-${rawId.replace(/[^a-zA-Z0-9_-]/g, "")}`;
-
-  // ------------------------------------------------------------------
-  // RESPONSIVE LOCKUP — on handheld/portrait widths we stack the name
-  // into two lines ("Aadesh" / "Khande") so it reads as a big type
-  // lockup that fills the viewport width, instead of the desktop's
-  // single giant line shrinking on mobile to a thin sliver. Desktop
-  // (>= stackBreakpoint) stays an untouched single line.
-  // ------------------------------------------------------------------
+  const rootRef = useRef<HTMLDivElement>(null);
+  const strokeLayerRef = useRef<HTMLDivElement>(null);
+  const fillLayerRef = useRef<HTMLDivElement>(null);
   const [stacked, setStacked] = useState(false);
 
+  // Responsive two-line stack on mobile
   useEffect(() => {
     const mql = window.matchMedia(`(max-width: ${stackBreakpoint}px)`);
     const apply = () => setStacked(mql.matches);
@@ -74,100 +61,30 @@ export default function StrokeText({
     return [parts.slice(0, -1).join(" "), parts[parts.length - 1]];
   }, [text, stacked]);
 
-  const dash = Math.max(fontSize * 7, 200);
-  // Proportionally tighter tracking on the stacked (smaller) lockup.
-  const effectiveLetterSpacing = stacked ? Math.round(letterSpacing * 0.55) : letterSpacing;
-  const effectiveWordSpacing = stacked ? Math.round(wordSpacing * 0.5) : wordSpacing;
-  // Vertical rhythm between stacked lines.
-  const lineHeight = Math.round(fontSize * 1.18);
-  const baselineY = (i: number) => Math.round(fontSize * 1.02 + i * lineHeight);
-
-  const fontStyle = useMemo(
-    () => ({
-      fontSize: `${fontSize}px`,
-      fontWeight: `var(--font-hero-weight, ${fontWeight})` as any,
-      letterSpacing: `${effectiveLetterSpacing}px`,
-      wordSpacing: `${effectiveWordSpacing}px`,
-      fontFamily: "var(--font-hero)",
-    }),
-    [fontSize, fontWeight, effectiveLetterSpacing, effectiveWordSpacing]
-  );
-
-  useLayoutEffect(() => {
-    const node = textGroupRef.current;
-    if (!node) return undefined;
-
-    let cancelled = false;
-    const measure = () => {
-      if (cancelled || !textGroupRef.current) return;
-      let bbox;
-      try {
-        bbox = textGroupRef.current.getBBox();
-      } catch {
-        return;
-      }
-      if (!bbox || !bbox.width) return;
-      const pad = Math.max(Number(strokeWidth) || 1, fontSize * 0.1);
-      const next = {
-        x: bbox.x - pad,
-        y: bbox.y - pad,
-        width: bbox.width + pad * 2,
-        height: bbox.height + pad * 2,
-      };
-      if (cancelled) return;
-      setBox((prev) =>
-        prev && Math.abs(prev.x - next.x) < 0.5 && Math.abs(prev.width - next.width) < 0.5 && Math.abs(prev.y - next.y) < 0.5
-          ? prev
-          : next
-      );
-    };
-
-    measure();
-    if (typeof document !== "undefined" && document.fonts?.ready) {
-      document.fonts.ready.then(measure).catch(() => {});
-    }
-
-    return () => {
-      cancelled = true;
-    };
-  }, [lines, fontSize, fontWeight, effectiveLetterSpacing, strokeWidth]);
-
   useEffect(() => {
     const root = rootRef.current;
-    if (typeof window === "undefined" || !root || !box) return undefined;
+    const strokeEl = strokeLayerRef.current;
+    const fillEl = fillLayerRef.current;
+    if (typeof window === "undefined" || !root || !strokeEl || !fillEl) return undefined;
 
-    const strokes = gsap.utils.toArray(root.querySelectorAll("[data-stroke-char]"));
-    const fills = gsap.utils.toArray(root.querySelectorAll("[data-fill-char]"));
-    const wipe = wipeRectRef.current;
-
-    if (!strokes.length) return undefined;
-
-    const useWipe = true;
-    const fillDuration = Math.max(0.4, drawDuration * 0.5);
-
-    const targets = [...strokes, ...fills, wipe].filter(Boolean);
-
-    const setStart = () => {
-      gsap.killTweensOf(targets);
-      gsap.set(strokes, { strokeDasharray: dash, strokeDashoffset: dash });
-      gsap.set(fills, { opacity: useWipe ? 1 : 0 });
-      if (wipe) gsap.set(wipe, { attr: { width: 0 } });
-    };
-
+    const strokeChars = strokeEl.querySelectorAll("[data-char]");
     const prefersReducedMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+
     if (prefersReducedMotion) {
-      gsap.set(strokes, { strokeDasharray: dash, strokeDashoffset: 0 });
-      gsap.set(fills, { opacity: 1 });
-      if (wipe) gsap.set(wipe, { attr: { width: box.width } });
+      gsap.set(strokeEl, { opacity: 1, clipPath: "inset(0 0% 0 0)" });
+      gsap.set(fillEl, { opacity: 1, clipPath: "inset(0 0% 0 0)" });
+      gsap.set(strokeChars, { opacity: 1, y: 0 });
       onComplete?.();
-      return () => gsap.killTweensOf(targets);
+      return undefined;
     }
 
-    setStart();
+    // Reset to start state
+    gsap.killTweensOf([strokeEl, fillEl, ...Array.from(strokeChars)]);
+    gsap.set(strokeEl, { opacity: 1, clipPath: "inset(0 100% 0 0)" });
+    gsap.set(fillEl, { opacity: 1, clipPath: "inset(0 100% 0 0)" });
+    gsap.set(strokeChars, { opacity: 0, y: 12 });
 
-    if (!animate) {
-      return () => gsap.killTweensOf(targets);
-    }
+    if (!animate) return undefined;
 
     const tl = gsap.timeline({
       defaults: { overwrite: "auto" },
@@ -176,80 +93,135 @@ export default function StrokeText({
       },
     });
 
-    tl.to(strokes, { strokeDashoffset: 0, duration: drawDuration, ease, stagger: { each: stagger } }, 0);
+    const fillDuration = Math.max(0.5, drawDuration * 0.55);
 
-    if (useWipe && wipe) {
-      tl.to(wipe, { attr: { width: box.width }, duration: fillDuration, ease: "power2.inOut" }, drawDuration + fillDelay);
-    }
+    // 1. Wipe stroke container in + stagger characters
+    tl.to(
+      strokeEl,
+      {
+        clipPath: "inset(0 0% 0 0)",
+        duration: drawDuration,
+        ease: "power2.inOut",
+      },
+      0
+    );
+
+    tl.to(
+      strokeChars,
+      {
+        opacity: 1,
+        y: 0,
+        duration: 0.6,
+        stagger: stagger,
+        ease: ease,
+      },
+      0.05
+    );
+
+    // 2. Wipe the solid fill across the letters
+    tl.to(
+      fillEl,
+      {
+        clipPath: "inset(0 0% 0 0)",
+        duration: fillDuration,
+        ease: "power2.inOut",
+      },
+      drawDuration * 0.65 + fillDelay
+    );
 
     return () => {
       tl.kill();
-      gsap.killTweensOf(targets);
+      gsap.killTweensOf([strokeEl, fillEl, ...Array.from(strokeChars)]);
     };
-  }, [box, dash, drawDuration, fillDelay, stagger, ease, animate, onComplete]);
-
-  const viewBox = box ? `${box.x} ${box.y} ${box.width} ${box.height}` : `0 ${-fontSize * 1.3} 600 ${fontSize * 1.3}`;
+  }, [lines, drawDuration, fillDelay, stagger, ease, animate, onComplete, stacked]);
 
   return (
-    <span
+    <div
       ref={rootRef}
-      className={`stroke-text ${className}`.trim()}
-      style={style}
-      role="img"
+      className={`stroke-text-lockup relative select-none text-center ${className}`.trim()}
+      style={{
+        ...style,
+        fontFamily: "var(--font-hero)",
+      }}
+      role="heading"
+      aria-level={1}
       aria-label={String(text ?? "")}
     >
-      <svg
-        className="stroke-text__svg"
-        viewBox={viewBox}
-        preserveAspectRatio="xMidYMid meet"
-        aria-hidden="true"
-      >
-        <defs>
-          <clipPath id={wipeId} clipPathUnits="userSpaceOnUse">
-            <rect ref={wipeRectRef} x={box?.x ?? 0} y={box?.y ?? 0} width="0" height={box?.height ?? fontSize * 1.3} />
-          </clipPath>
-        </defs>
-        <g ref={textGroupRef}>
+      {/* Container holding perfectly aligned stroke and fill layers */}
+      <div className="relative inline-flex flex-col items-center justify-center">
+        {/* Layer 1: Outlined Stroke Layer */}
+        <div
+          ref={strokeLayerRef}
+          className="stroke-text__stroke-layer leading-[0.95] tracking-tight will-change-[clip-path,transform]"
+          style={{
+            clipPath: "inset(0 100% 0 0)",
+            WebkitTextStroke: `${strokeWidth}px ${strokeColor}`,
+            color: "transparent",
+            fontFamily: "var(--font-hero)",
+            fontWeight: fontWeight,
+          }}
+          aria-hidden="true"
+        >
           {lines.map((line, li) => (
-            <text
-              key={`s-${li}`}
-              className="stroke-text__stroke"
-              x="0"
-              y={baselineY(li)}
-              fill="none"
-              stroke={strokeColor}
-              strokeWidth={strokeWidth}
-              strokeLinejoin="round"
-              strokeLinecap="round"
-              style={fontStyle}
+            <div
+              key={`stroke-line-${li}`}
+              className="whitespace-nowrap font-hero text-[clamp(44px,14vw,80px)] sm:text-[clamp(68px,11vw,132px)]"
+              style={{
+                letterSpacing: stacked ? "-0.03em" : "-0.04em",
+              }}
             >
               {Array.from(line).map((char, ci) => (
-                <tspan data-stroke-char key={`sc-${ci}`}>
-                  {char}
-                </tspan>
+                <span
+                  key={`sc-${li}-${ci}`}
+                  data-char
+                  className="inline-block"
+                  style={{
+                    marginRight: char === " " ? (stacked ? "0.25em" : "0.35em") : undefined,
+                  }}
+                >
+                  {char === " " ? "\u00A0" : char}
+                </span>
               ))}
-            </text>
+            </div>
           ))}
-        </g>
-        {lines.map((line, li) => (
-          <text
-            key={`f-${li}`}
-            className="stroke-text__fill"
-            x="0"
-            y={baselineY(li)}
-            fill={fillColor}
-            stroke="none"
-            style={fontStyle}
-            clipPath={`url(#${wipeId})`}
-          >
-            {Array.from(line).map((char, ci) => (
-              <tspan data-fill-char key={`fc-${ci}`}>
-                {char}
-              </tspan>
-            ))}
-          </text>
-        ))}
-      </svg>
-    </span>
+        </div>
+
+        {/* Layer 2: Solid Fill Layer (wipes over the stroke layer) */}
+        <div
+          ref={fillLayerRef}
+          className="stroke-text__fill-layer absolute inset-0 pointer-events-none leading-[0.95] tracking-tight will-change-[clip-path]"
+          style={{
+            clipPath: "inset(0 100% 0 0)",
+            color: fillColor,
+            fontFamily: "var(--font-hero)",
+            fontWeight: fontWeight,
+          }}
+          aria-hidden="true"
+        >
+          {lines.map((line, li) => (
+            <div
+              key={`fill-line-${li}`}
+              className="whitespace-nowrap font-hero text-[clamp(44px,14vw,80px)] sm:text-[clamp(68px,11vw,132px)]"
+              style={{
+                letterSpacing: stacked ? "-0.03em" : "-0.04em",
+              }}
+            >
+              {Array.from(line).map((char, ci) => (
+                <span
+                  key={`fc-${li}-${ci}`}
+                  className="inline-block"
+                  style={{
+                    marginRight: char === " " ? (stacked ? "0.25em" : "0.35em") : undefined,
+                  }}
+                >
+                  {char === " " ? "\u00A0" : char}
+                </span>
+              ))}
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
   );
 }
+
