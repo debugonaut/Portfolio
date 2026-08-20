@@ -4,6 +4,7 @@ import CardNav, { type CardNavItem, type CardNavCategory } from "@/components/ca
 import ScrollIndicator from "@/components/scroll-indicator";
 import StrokeText from "@/components/stroke-text";
 import "@/components/stroke-text.css";
+import { useNameDocking } from "@/hooks/use-name-docking";
 
 import { FaGithub, FaTwitter, FaLinkedinIn, FaInstagram, FaEnvelope, FaPenNib, FaNewspaper } from "react-icons/fa";
 import { SiLeetcode } from "react-icons/si";
@@ -80,8 +81,14 @@ export default function Home() {
   const navWrapRef = useRef<HTMLDivElement | null>(null);
   const promptRef = useRef<HTMLDivElement | null>(null);
   const nameRef = useRef<HTMLDivElement | null>(null);
-  const navReadyRef = useRef(false);
-  const setDockedRef = useRef<((target: boolean) => void) | null>(null);
+  const [navReady, setNavReady] = useState(false);
+
+  const { nameDocked, logoRevealed, setDocked } = useNameDocking({
+    nameRef,
+    navWrapRef,
+    navReady,
+  });
+
   const [loadingComplete, setLoadingComplete] = useState(() => {
     if (typeof window !== "undefined") {
       try {
@@ -96,8 +103,6 @@ export default function Home() {
     return false;
   });
   const [strokeComplete, setStrokeComplete] = useState(false);
-  const [nameDocked, setNameDocked] = useState(false);
-  const [logoRevealed, setLogoRevealed] = useState(false);
 
   const handleLoadingComplete = useCallback(() => {
     try {
@@ -114,8 +119,8 @@ export default function Home() {
 
   const handleLogoClick = useCallback(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
-    setDockedRef.current?.(false);
-  }, []);
+    setDocked(false);
+  }, [setDocked]);
 
   // Update tab title when switching away so it stands out cleanly in open tabs
   useEffect(() => {
@@ -149,7 +154,7 @@ export default function Home() {
 
       if (reduceMotion || !nav || !prompt) {
         gsap.set([nav, prompt].filter(Boolean), { autoAlpha: 1, y: 0 });
-        navReadyRef.current = true;
+        setNavReady(true);
         return;
       }
 
@@ -166,7 +171,7 @@ export default function Home() {
           delay: NAV_REVEAL_DELAY,
           ease: "expo.out",
           onComplete: () => {
-            navReadyRef.current = true;
+            setNavReady(true);
           },
         },
       );
@@ -229,127 +234,6 @@ export default function Home() {
     return () => detach.forEach((fn) => fn());
   }, []);
 
-  // Name morph: on downward scroll the hero name minimizes and docks into the
-  // center of the top bar; scrolling up returns it. Transform-only (scale +
-  // x/y from live rects) per the perf rules.
-  useLayoutEffect(() => {
-    const nameEl = nameRef.current;
-    const nav = navWrapRef.current;
-    if (!nameEl || !nav) return;
-
-    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    let docked = false;
-    let animating = false;
-
-    const animate = (target: boolean) => {
-      const topBar = nav.querySelector<HTMLElement>(".card-nav-top");
-      const toggle = topBar?.querySelector<HTMLElement>("button");
-      if (!topBar || !toggle) return;
-
-      const rect = nameEl.getBoundingClientRect();
-      if (!rect.width) return;
-
-      const vars: gsap.TweenVars = {
-        duration: reduced ? 0.001 : 0.6,
-        ease: "expo.inOut",
-        overwrite: "auto",
-        onComplete: () => {
-          animating = false;
-        },
-      };
-
-      if (!target) {
-        // Undocking: fade name back in as it returns
-        gsap.to(nameEl, { ...vars, x: 0, y: 0, scale: 1, autoAlpha: 1 });
-        // Hide logo after name is visible
-        setTimeout(() => {
-          setNameDocked(false);
-          setLogoRevealed(false);
-        }, 150);
-        return;
-      }
-
-      // Docking: target center of navbar top bar
-      const topBarRect = topBar.getBoundingClientRect();
-      const targetCenterX = topBarRect.left + topBarRect.width / 2;
-      const targetCenterY = topBarRect.top + topBarRect.height / 2;
-      const currentCenterX = rect.left + rect.width / 2;
-      const currentCenterY = rect.top + rect.height / 2;
-
-      const deltaX = targetCenterX - currentCenterX;
-      const deltaY = targetCenterY - currentCenterY;
-
-      // Scale down to fit top bar height (~70% of bar height)
-      const targetHeight = topBarRect.height * 0.7;
-      const scale = targetHeight / rect.height;
-
-      // Animate name towards center of navbar
-      gsap.to(nameEl, {
-        ...vars,
-        x: deltaX,
-        y: deltaY,
-        scaleX: scale * 0.3,
-        scaleY: scale,
-        autoAlpha: 0,
-      });
-
-      // Reveal signature logo when name disappears
-      setTimeout(() => {
-        setNameDocked(true);
-        setTimeout(() => {
-          setLogoRevealed(true);
-        }, 50);
-      }, 300);
-    };
-
-    const setDocked = (target: boolean) => {
-      if (target === docked || animating) return;
-      if (!navReadyRef.current) return;
-      animating = true;
-      docked = target;
-      animate(target);
-    };
-
-    setDockedRef.current = setDocked;
-
-    let touchStartY = 0;
-    const onWheel = (e: WheelEvent) => {
-      if (e.deltaY > 8) setDocked(true);
-      else if (e.deltaY < -8) setDocked(false);
-    };
-    const onTouchStart = (e: TouchEvent) => {
-      touchStartY = e.touches[0].clientY;
-    };
-    const onTouchMove = (e: TouchEvent) => {
-      const delta = touchStartY - e.touches[0].clientY;
-      if (delta > 12) setDocked(true);
-      else if (delta < -12) setDocked(false);
-    };
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "ArrowDown") setDocked(true);
-      else if (e.key === "ArrowUp") setDocked(false);
-    };
-    const onResize = () => {
-      if (docked && !animating) animate(true);
-    };
-
-    window.addEventListener("wheel", onWheel, { passive: true });
-    window.addEventListener("touchstart", onTouchStart, { passive: true });
-    window.addEventListener("touchmove", onTouchMove, { passive: true });
-    window.addEventListener("keydown", onKey);
-    window.addEventListener("resize", onResize);
-
-    return () => {
-      setDockedRef.current = null;
-      window.removeEventListener("wheel", onWheel);
-      window.removeEventListener("touchstart", onTouchStart);
-      window.removeEventListener("touchmove", onTouchMove);
-      window.removeEventListener("keydown", onKey);
-      window.removeEventListener("resize", onResize);
-      gsap.killTweensOf(nameEl);
-    };
-  }, []);
-
   return (
     <>
       {/* Loading Screen — shows on first visit */}
@@ -387,8 +271,9 @@ export default function Home() {
             fillDelay={STROKE_FILL_DELAY}
             stagger={STROKE_STAGGER}
             fontSize={128}
-            fontWeight={800}
+            fontWeight={400}
             letterSpacing={-4}
+            wordSpacing={24}
             className="relative z-[100]"
             animate={loadingComplete}
             onComplete={handleStrokeComplete}

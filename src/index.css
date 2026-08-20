@@ -12,7 +12,8 @@
   /* beige light theme (user-pinned) */
   --background: #f2ecdf;
   --foreground: #1a1712;
-  --font-hero: "Lexend", ui-sans-serif; /* HERO FONT — change this to swap the name font only */
+  --font-hero: "Bricolage Grotesque Variable", "Bricolage Grotesque", sans-serif; /* HERO FONT — change this to swap the name font only */
+  --font-hero-weight: 400;
   --muted: #6f7480;
   --border: rgba(20, 22, 27, 0.1);
   --card: rgba(255, 255, 255, 0.66);
@@ -36,7 +37,8 @@
   /* pure black dark theme (user-pinned) */
   --background: #000000;
   --foreground: #f0e6d3;
-  --font-hero: "Lexend", ui-sans-serif;
+  --font-hero: "Bricolage Grotesque Variable", "Bricolage Grotesque", sans-serif;
+  --font-hero-weight: 400;
   --muted: #9c9c9c;
   --border: rgba(255, 255, 255, 0.14);
   --card: rgba(24, 24, 26, 0.66);

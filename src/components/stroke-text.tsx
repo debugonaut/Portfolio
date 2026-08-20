@@ -15,6 +15,7 @@ interface StrokeTextProps {
   fontSize?: number;
   fontWeight?: number;
   letterSpacing?: number;
+  wordSpacing?: number;
   className?: string;
   style?: React.CSSProperties;
   /** Whether the stroke drawing timeline should play (defaults to true) */
@@ -33,8 +34,9 @@ export default function StrokeText({
   stagger = 0.05,
   ease = "power2.out",
   fontSize = 128,
-  fontWeight = 800,
+  fontWeight = 400,
   letterSpacing = -4,
+  wordSpacing = 24,
   className = "",
   style,
   animate = true,
@@ -75,6 +77,7 @@ export default function StrokeText({
   const dash = Math.max(fontSize * 7, 200);
   // Proportionally tighter tracking on the stacked (smaller) lockup.
   const effectiveLetterSpacing = stacked ? Math.round(letterSpacing * 0.55) : letterSpacing;
+  const effectiveWordSpacing = stacked ? Math.round(wordSpacing * 0.5) : wordSpacing;
   // Vertical rhythm between stacked lines.
   const lineHeight = Math.round(fontSize * 1.18);
   const baselineY = (i: number) => Math.round(fontSize * 1.02 + i * lineHeight);
@@ -82,11 +85,12 @@ export default function StrokeText({
   const fontStyle = useMemo(
     () => ({
       fontSize: `${fontSize}px`,
-      fontWeight,
+      fontWeight: `var(--font-hero-weight, ${fontWeight})` as any,
       letterSpacing: `${effectiveLetterSpacing}px`,
+      wordSpacing: `${effectiveWordSpacing}px`,
       fontFamily: "var(--font-hero)",
     }),
-    [fontSize, fontWeight, effectiveLetterSpacing]
+    [fontSize, fontWeight, effectiveLetterSpacing, effectiveWordSpacing]
   );
 
   useLayoutEffect(() => {
